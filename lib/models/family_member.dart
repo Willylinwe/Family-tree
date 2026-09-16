@@ -73,6 +73,8 @@ class FamilyMember {
     this.deathYear,
     this.occupation,
     this.causeOfDeath,
+    this.causeCategory,
+    this.causeVisible = true,
   });
 
   final String id;

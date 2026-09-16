@@ -70,11 +70,19 @@ class DeceasedMembersBiographyScreen extends StatelessWidget {
                             _yearsLabel(member),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                        if (member.causeOfDeath != null) ...[
+                        if (member.causeVisible) ...[
+                          if (member.causeOfDeath != null || member.causeCategory != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Cause of death: ${member.causeOfDeath ?? member.causeCategory?.label ?? 'Unknown'}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ] else ...[
                           const SizedBox(height: 6),
                           Text(
-                            'Cause of death: ${member.causeOfDeath!}',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            'Cause of death: Private',
+                            style: TextStyle(color: Colors.grey.shade600),
                           ),
                         ],
                         if (member.location != null) ...[

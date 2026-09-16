@@ -5,6 +5,7 @@ import '../screens/add_member_screen.dart';
 import '../screens/deceased_members_biography_screen.dart';
 import '../screens/family_lineage_map_screen.dart';
 import '../screens/member_details_screen.dart';
+import '../screens/health_report_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/member_widgets.dart';
 import '../widgets/stats_card.dart';
@@ -148,6 +149,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _openFamilyLineageMap,
                               icon: const Icon(Icons.account_tree_outlined),
                               label: const Text('Family lineage map'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white54),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _openHealthReport,
+                              icon: const Icon(Icons.health_and_safety_outlined),
+                              label: const Text('Anonymized health report'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 side: const BorderSide(color: Colors.white54),
@@ -333,6 +344,15 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => FamilyLineageMapScreen(
           members: _controller.members,
         ),
+      ),
+    );
+  }
+
+  void _openHealthReport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HealthReportScreen(members: _controller.members),
       ),
     );
   }

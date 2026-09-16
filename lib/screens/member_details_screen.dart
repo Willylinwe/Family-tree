@@ -103,9 +103,15 @@ class MemberDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       _buildInfoRow(context, 'Death year', member.deathYear!),
                     ],
-                    if (member.causeOfDeath != null) ...[
+                    if (!member.causeVisible)
+                      const SizedBox.shrink()
+                    else if (member.causeOfDeath != null || member.causeCategory != null) ...[
                       const SizedBox(height: 10),
-                      _buildInfoRow(context, 'Cause of death', member.causeOfDeath!),
+                      _buildInfoRow(
+                        context,
+                        'Cause of death',
+                        member.causeOfDeath ?? member.causeCategory?.label ?? 'Unknown',
+                      ),
                     ],
                     if (member.location != null) ...[
                       const SizedBox(height: 10),

@@ -27,6 +27,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   final _birthYearController = TextEditingController();
   final _deathYearController = TextEditingController();
   final _causeOfDeathController = TextEditingController();
+  CauseCategory? _selectedCauseCategory;
+  bool _shareCause = true;
   final _locationController = TextEditingController();
   final _noteController = TextEditingController();
 
@@ -62,228 +64,430 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add family member'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Add family member'),
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Create a new branch in your family tree',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add a person and connect them to a parent if you want to build the tree step by step. For a family foundation, start with a husband and wife pair and mark each person as alive or deceased.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full name',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _roleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Role or relationship',
-                    prefixIcon: Icon(Icons.badge_outlined),
-                    hintText: 'Example: Grandmother, Son, Aunt',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _relationshipController,
-                  decoration: const InputDecoration(
-                    labelText: 'Relationship role',
-                    prefixIcon: Icon(Icons.family_restroom_outlined),
-                    hintText: 'Example: Husband, Wife, Son, Daughter',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _occupationController,
-                  decoration: const InputDecoration(
-                    labelText: 'Occupation',
-                    prefixIcon: Icon(Icons.work_outline),
-                    hintText: 'Example: Teacher, Farmer, Caregiver',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _birthYearController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Birth year',
-                          prefixIcon: Icon(Icons.cake_outlined),
-                          hintText: 'YYYY',
-                        ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Create a new branch',
+                            style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add a family member and connect them to a parent or founder when you are ready.',
+                            style: textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _deathYearController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Death year',
-                          prefixIcon: Icon(Icons.nights_stay_outlined),
-                          hintText: 'YYYY',
-                        ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Basic details',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _nameController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Full name',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a name';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _roleController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Role or relationship',
+                              prefixIcon: Icon(Icons.badge_outlined),
+                              hintText: 'Example: Grandmother, Son, Aunt',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _relationshipController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Relationship role',
+                              prefixIcon: Icon(Icons.family_restroom_outlined),
+                              hintText: 'Example: Husband, Wife, Son, Daughter',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _occupationController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Occupation',
+                              prefixIcon: Icon(Icons.work_outline),
+                              hintText: 'Example: Teacher, Farmer, Caregiver',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _birthYearController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Birth year',
+                                    prefixIcon: Icon(Icons.cake_outlined),
+                                    hintText: 'YYYY',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _deathYearController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Death year',
+                                    prefixIcon: Icon(Icons.nights_stay_outlined),
+                                    hintText: 'YYYY',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _locationController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Location',
+                              prefixIcon: Icon(Icons.location_on_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _noteController,
+                            maxLines: 3,
+                            decoration: const InputDecoration(
+                              labelText: 'Short note',
+                              prefixIcon: Icon(Icons.notes_outlined),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Life details',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SwitchListTile.adaptive(
+                            value: _isAlive,
+                            contentPadding: EdgeInsets.zero,
+                            onChanged: (value) => setState(() => _isAlive = value),
+                            title: const Text('Living person'),
+                            subtitle: const Text(
+                              'Turn this off if this person is deceased.',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (!_isAlive) ...[
+                            DropdownButtonFormField<CauseCategory>(
+                              key: ValueKey(_selectedCauseCategory?.name ?? 'cause-none'),
+                              initialValue: _selectedCauseCategory,
+                              decoration: const InputDecoration(
+                                labelText: 'Cause category',
+                                prefixIcon: Icon(Icons.label_important_outline),
+                              ),
+                              items: CauseCategory.values
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c.label),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) => setState(() => _selectedCauseCategory = v),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _causeOfDeathController,
+                              decoration: const InputDecoration(
+                                labelText: 'Cause of death (notes)',
+                                prefixIcon: Icon(Icons.medical_services_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SwitchListTile.adaptive(
+                              value: _shareCause,
+                              contentPadding: EdgeInsets.zero,
+                              onChanged: (v) => setState(() => _shareCause = v),
+                              title: const Text('Share cause of death with family'),
+                              subtitle: const Text('Turn off to keep cause private'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.allMembers.isNotEmpty)
+                            DropdownButtonFormField<String>(
+                              key: ValueKey(_selectedSpouseId ?? 'spouse-none'),
+                              initialValue: _selectedSpouseId,
+                              decoration: const InputDecoration(
+                                labelText: 'Spouse or partner',
+                                prefixIcon: Icon(Icons.favorite_outline),
+                              ),
+                              items: widget.allMembers
+                                  .map(
+                                    (member) => DropdownMenuItem(
+                                      value: member.id,
+                                      child: Text(member.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) => setState(() => _selectedSpouseId = value),
+                            ),
+                          if (widget.allMembers.isNotEmpty) const SizedBox(height: 12),
+                          if (widget.forceFounder)
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                'This member will start a new generation branch without selecting a parent.',
+                                style: textTheme.bodyMedium,
+                              ),
+                            )
+                          else if (widget.allMembers.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                'This will become the family founder.',
+                                style: textTheme.bodyMedium,
+                              ),
+                            )
+                          else
+                            SwitchListTile.adaptive(
+                              value: _isFounder,
+                              contentPadding: EdgeInsets.zero,
+                              onChanged: (value) {
+                                setState(() {
+                                  _isFounder = value;
+                                  if (_isFounder) {
+                                    _selectedParentId = null;
+                                  }
+                                });
+                              },
+                              title: const Text('Make this person the founder'),
+                              subtitle: const Text(
+                                'Turn this on if this person starts a new branch.',
+                              ),
+                            ),
+                          const SizedBox(height: 12),
+                          if (!_isFounder && widget.allMembers.isNotEmpty)
+                            DropdownButtonFormField<String>(
+                              key: ValueKey(_selectedParentId ?? 'parent-none'),
+                              initialValue: _selectedParentId,
+                              decoration: const InputDecoration(
+                                labelText: 'Choose parent',
+                                prefixIcon: Icon(Icons.family_restroom_outlined),
+                              ),
+                              items: widget.allMembers
+                                  .map(
+                                    (member) => DropdownMenuItem(
+                                      value: member.id,
+                                      child: Text(member.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedParentId = value;
+                                });
+                              },
+                              validator: (value) {
+                                if (!_isFounder && value == null) {
+                                  return 'Please select a parent';
+                                }
+                                return null;
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _openFamilyHistoryDialog,
+                            icon: const Icon(Icons.history_edu_outlined),
+                            label: const Text('Family history'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _saveMember,
+                            icon: const Icon(Icons.check),
+                            label: const Text('Save member'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _causeOfDeathController,
-                  decoration: const InputDecoration(
-                    labelText: 'Cause of death',
-                    prefixIcon: Icon(Icons.medical_services_outlined),
-                    hintText: 'Example: Heart disease, accident, stroke',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(
-                    labelText: 'Location',
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _noteController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Short note',
-                    prefixIcon: Icon(Icons.notes_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile.adaptive(
-                  value: _isAlive,
-                  onChanged: (value) => setState(() => _isAlive = value),
-                  title: const Text('Living person'),
-                  subtitle: const Text('Turn this off if this person is deceased.'),
-                ),
-                const SizedBox(height: 12),
-                if (widget.allMembers.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedSpouseId,
-                    decoration: const InputDecoration(
-                      labelText: 'Spouse or partner',
-                      prefixIcon: Icon(Icons.favorite_outline),
-                    ),
-                    items: widget.allMembers
-                        .map(
-                          (member) => DropdownMenuItem(
-                            value: member.id,
-                            child: Text(member.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() => _selectedSpouseId = value),
-                  ),
-                const SizedBox(height: 20),
-                if (widget.forceFounder)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      'This member will start a new generation branch without selecting a parent.',
-                    ),
-                  )
-                else if (widget.allMembers.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text('This will become the family founder.'),
-                  )
-                else
-                  SwitchListTile.adaptive(
-                    value: _isFounder,
-                    onChanged: (value) {
-                      setState(() {
-                        _isFounder = value;
-                        if (_isFounder) {
-                          _selectedParentId = null;
-                        }
-                      });
-                    },
-                    title: const Text('Make this person the founder'),
-                    subtitle: const Text(
-                      'Turn this on if this person starts a new branch.',
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                if (!_isFounder && widget.allMembers.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedParentId,
-                    decoration: const InputDecoration(
-                      labelText: 'Choose parent',
-                      prefixIcon: Icon(Icons.family_restroom_outlined),
-                    ),
-                    items: widget.allMembers
-                        .map(
-                          (member) => DropdownMenuItem(
-                            value: member.id,
-                            child: Text(member.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedParentId = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (!_isFounder && value == null) {
-                        return 'Please select a parent';
-                      }
-                      return null;
-                    },
-                  ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _saveMember,
-                    icon: const Icon(Icons.check),
-                    label: const Text('Save member'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _openFamilyHistoryDialog() async {
+    final controller = TextEditingController(text: _noteController.text);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Family history'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: TextField(
+              controller: controller,
+              maxLines: 8,
+              minLines: 5,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Add notes about family traditions, stories, milestones, and memories...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: const Text('Save note'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _noteController.text = result.trim();
+        _noteController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _noteController.text.length),
+        );
+      });
+    }
   }
 
   void _saveMember() {
@@ -302,6 +506,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final birthYear = _birthYearController.text.trim();
     final deathYear = _deathYearController.text.trim();
     final causeOfDeath = _causeOfDeathController.text.trim();
+    final causeCategory = _selectedCauseCategory;
+    final shareCause = _shareCause;
     final location = _locationController.text.trim();
     final note = _noteController.text.trim();
 
@@ -326,6 +532,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       birthYear: birthYear.isEmpty ? null : birthYear,
       deathYear: deathYear.isEmpty ? null : deathYear,
       causeOfDeath: causeOfDeath.isEmpty ? null : causeOfDeath,
+      causeCategory: causeCategory,
+      causeVisible: shareCause,
     );
 
     widget.onSave(newMember);
