@@ -4,6 +4,8 @@ enum LifeStatus { alive, deceased }
 
 enum CauseCategory { illness, accident, unknown }
 
+enum FamilyGender { male, female, other }
+
 extension CauseCategoryHelpers on CauseCategory {
   String get value => name;
 
@@ -55,6 +57,35 @@ extension LifeStatusHelpers on LifeStatus {
   }
 }
 
+extension FamilyGenderHelpers on FamilyGender {
+  String get value => name;
+
+  String get label {
+    switch (this) {
+      case FamilyGender.male:
+        return 'Male';
+      case FamilyGender.female:
+        return 'Female';
+      case FamilyGender.other:
+        return 'Other';
+    }
+  }
+
+  static FamilyGender fromString(String? raw) {
+    switch (raw?.toLowerCase()) {
+      case 'male':
+        return FamilyGender.male;
+      case 'female':
+        return FamilyGender.female;
+      case 'other':
+      default:
+        return FamilyGender.other;
+    }
+  }
+}
+
+const _undefined = Object();
+
 @immutable
 class FamilyMember {
   const FamilyMember({
@@ -75,6 +106,7 @@ class FamilyMember {
     this.causeOfDeath,
     this.causeCategory,
     this.causeVisible = true,
+    this.gender = FamilyGender.other,
   });
 
   final String id;
@@ -94,6 +126,36 @@ class FamilyMember {
   final String? causeOfDeath;
   final CauseCategory? causeCategory;
   final bool causeVisible;
+  final FamilyGender gender;
+
+  static String autoRole({required int generation, required FamilyGender gender}) {
+    switch (generation) {
+      case 0:
+        if (gender == FamilyGender.male) return 'Patriarch';
+        if (gender == FamilyGender.female) return 'Matriarch';
+        return 'Founder';
+      case 1:
+        if (gender == FamilyGender.male) return 'Son';
+        if (gender == FamilyGender.female) return 'Daughter';
+        return 'Child';
+      default:
+        final prefix = _generationPrefix(generation);
+        if (gender == FamilyGender.male) return '${prefix}son';
+        if (gender == FamilyGender.female) return '${prefix}daughter';
+        return '${prefix}child';
+    }
+  }
+
+  static String _generationPrefix(int generation) {
+    if (generation == 2) return 'Grand';
+    if (generation <= 1) return '';
+    final buffer = StringBuffer();
+    for (var i = 2; i < generation; i++) {
+      buffer.write('Great-');
+    }
+    buffer.write('Grand');
+    return buffer.toString();
+  }
 
   String get initials {
     final words = name.split(' ');
@@ -111,42 +173,52 @@ class FamilyMember {
   String get statusLabel => status.label;
 
   FamilyMember copyWith({
-    String? id,
-    String? name,
-    String? role,
-    int? generation,
-    String? parentId,
-    List<String>? childIds,
-    String? location,
-    String? note,
-    String? spouseId,
-    String? relationshipRole,
-    LifeStatus? status,
-    String? birthYear,
-    String? deathYear,
-    String? occupation,
-    String? causeOfDeath,
-    CauseCategory? causeCategory,
-    bool? causeVisible,
+    Object? id = _undefined,
+    Object? name = _undefined,
+    Object? role = _undefined,
+    Object? generation = _undefined,
+    Object? parentId = _undefined,
+    Object? childIds = _undefined,
+    Object? location = _undefined,
+    Object? note = _undefined,
+    Object? spouseId = _undefined,
+    Object? relationshipRole = _undefined,
+    Object? status = _undefined,
+    Object? birthYear = _undefined,
+    Object? deathYear = _undefined,
+    Object? occupation = _undefined,
+    Object? causeOfDeath = _undefined,
+    Object? causeCategory = _undefined,
+    Object? causeVisible = _undefined,
+    Object? gender = _undefined,
   }) {
     return FamilyMember(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      role: role ?? this.role,
-      generation: generation ?? this.generation,
-      parentId: parentId ?? this.parentId,
-      childIds: childIds ?? this.childIds,
-      location: location ?? this.location,
-      note: note ?? this.note,
-      spouseId: spouseId ?? this.spouseId,
-      relationshipRole: relationshipRole ?? this.relationshipRole,
-      status: status ?? this.status,
-      birthYear: birthYear ?? this.birthYear,
-      deathYear: deathYear ?? this.deathYear,
-      occupation: occupation ?? this.occupation,
-      causeOfDeath: causeOfDeath ?? this.causeOfDeath,
-      causeCategory: causeCategory ?? this.causeCategory,
-      causeVisible: causeVisible ?? this.causeVisible,
+      id: id == _undefined ? this.id : id as String,
+      name: name == _undefined ? this.name : name as String,
+      role: role == _undefined ? this.role : role as String,
+      generation: generation == _undefined ? this.generation : generation as int,
+      parentId: parentId == _undefined ? this.parentId : parentId as String?,
+      childIds: childIds == _undefined ? this.childIds : childIds as List<String>,
+      location: location == _undefined ? this.location : location as String?,
+      note: note == _undefined ? this.note : note as String?,
+      spouseId: spouseId == _undefined ? this.spouseId : spouseId as String?,
+      relationshipRole: relationshipRole == _undefined
+          ? this.relationshipRole
+          : relationshipRole as String,
+      status: status == _undefined ? this.status : status as LifeStatus,
+      birthYear: birthYear == _undefined ? this.birthYear : birthYear as String?,
+      deathYear: deathYear == _undefined ? this.deathYear : deathYear as String?,
+      occupation: occupation == _undefined ? this.occupation : occupation as String?,
+      causeOfDeath: causeOfDeath == _undefined
+          ? this.causeOfDeath
+          : causeOfDeath as String?,
+      causeCategory: causeCategory == _undefined
+          ? this.causeCategory
+          : causeCategory as CauseCategory?,
+      causeVisible: causeVisible == _undefined
+          ? this.causeVisible
+          : causeVisible as bool,
+      gender: gender == _undefined ? this.gender : gender as FamilyGender,
     );
   }
 
@@ -168,6 +240,7 @@ class FamilyMember {
         'causeOfDeath': causeOfDeath,
         'causeCategory': causeCategory?.value,
         'causeVisible': causeVisible,
+        'gender': gender.value,
       };
 
   factory FamilyMember.fromJson(Map<String, dynamic> json) {
@@ -205,9 +278,12 @@ class FamilyMember {
         causeOfDeath: json['causeOfDeath'] is String
           ? json['causeOfDeath'] as String
           : null,
-        causeCategory: CauseCategoryHelpers.fromString(
+      causeCategory: CauseCategoryHelpers.fromString(
           json['causeCategory'] is String ? json['causeCategory'] as String : null),
-        causeVisible: json['causeVisible'] is bool ? json['causeVisible'] as bool : true,
+      causeVisible:
+          json['causeVisible'] is bool ? json['causeVisible'] as bool : true,
+      gender: FamilyGenderHelpers.fromString(
+          json['gender'] is String ? json['gender'] as String : null),
     );
   }
 }

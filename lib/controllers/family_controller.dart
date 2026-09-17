@@ -70,6 +70,42 @@ class FamilyController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeMember(String memberId) async {
+    final memberExists = _members.any((member) => member.id == memberId);
+    if (!memberExists) return;
+
+    final remainingMembers = <FamilyMember>[];
+    for (final member in _members) {
+      if (member.id == memberId) {
+        continue;
+      }
+
+      var updatedMember = member;
+
+      if (updatedMember.parentId == memberId) {
+        updatedMember = updatedMember.copyWith(parentId: null, generation: 0);
+      }
+
+      if (updatedMember.spouseId == memberId) {
+        updatedMember = updatedMember.copyWith(spouseId: null);
+      }
+
+      if (updatedMember.childIds.contains(memberId)) {
+        updatedMember = updatedMember.copyWith(
+          childIds: updatedMember.childIds
+              .where((childId) => childId != memberId)
+              .toList(),
+        );
+      }
+
+      remainingMembers.add(updatedMember);
+    }
+
+    _members = remainingMembers;
+    await _saveMembers();
+    notifyListeners();
+  }
+
   Future<void> updateMembers(List<FamilyMember> newMembers) async {
     _members = List.unmodifiable(newMembers);
     await _saveMembers();

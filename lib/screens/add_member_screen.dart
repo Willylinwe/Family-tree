@@ -22,7 +22,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _roleController = TextEditingController();
-  final _relationshipController = TextEditingController(text: 'Family member');
+  final _relationshipController = TextEditingController();
   final _occupationController = TextEditingController();
   final _birthYearController = TextEditingController();
   final _deathYearController = TextEditingController();
@@ -34,6 +34,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
   bool _isFounder = true;
   bool _isAlive = true;
+  FamilyGender _selectedGender = FamilyGender.other;
   String? _selectedParentId;
   String? _selectedSpouseId;
 
@@ -45,6 +46,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     } else if (widget.allMembers.isNotEmpty) {
       _isFounder = false;
     }
+    _syncAutoRoleFields();
   }
 
   @override
@@ -155,23 +157,44 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             },
                           ),
                           const SizedBox(height: 12),
+                          DropdownButtonFormField<FamilyGender>(
+                            value: _selectedGender,
+                            decoration: const InputDecoration(
+                              labelText: 'Gender',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            items: FamilyGender.values
+                                .map(
+                                  (gender) => DropdownMenuItem(
+                                    value: gender,
+                                    child: Text(gender.label),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _selectedGender = value;
+                                _syncAutoRoleFields();
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
                           TextFormField(
                             controller: _roleController,
-                            textInputAction: TextInputAction.next,
+                            readOnly: true,
                             decoration: const InputDecoration(
-                              labelText: 'Role or relationship',
+                              labelText: 'Auto role',
                               prefixIcon: Icon(Icons.badge_outlined),
-                              hintText: 'Example: Grandmother, Son, Aunt',
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _relationshipController,
-                            textInputAction: TextInputAction.next,
+                            readOnly: true,
                             decoration: const InputDecoration(
                               labelText: 'Relationship role',
                               prefixIcon: Icon(Icons.family_restroom_outlined),
-                              hintText: 'Example: Husband, Wife, Son, Daughter',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -496,12 +519,17 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     }
 
     final name = _nameController.text.trim();
-    final role = _roleController.text.trim().isEmpty
-        ? 'Family member'
-        : _roleController.text.trim();
-    final relationshipRole = _relationshipController.text.trim().isEmpty
-        ? 'Family member'
-        : _relationshipController.text.trim();
+    final generation = _isFounder || widget.allMembers.isEmpty
+        ? 0
+        : _selectedParentId == null
+            ? 1
+            : _generationOfParent(_selectedParentId!);
+    final autoRole = FamilyMember.autoRole(
+      generation: generation,
+      gender: _selectedGender,
+    );
+    final role = autoRole;
+    final relationshipRole = autoRole;
     final occupation = _occupationController.text.trim();
     final birthYear = _birthYearController.text.trim();
     final deathYear = _deathYearController.text.trim();
@@ -516,9 +544,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       id: newMemberId,
       name: name,
       role: role,
-      generation: _isFounder || widget.allMembers.isEmpty
-          ? 0
-          : _generationOfParent(_selectedParentId!),
+      generation: generation,
       parentId: _isFounder || widget.allMembers.isEmpty
           ? null
           : _selectedParentId,
@@ -534,10 +560,29 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       causeOfDeath: causeOfDeath.isEmpty ? null : causeOfDeath,
       causeCategory: causeCategory,
       causeVisible: shareCause,
+      gender: _selectedGender,
     );
 
     widget.onSave(newMember);
     Navigator.pop(context);
+  }
+
+  void _syncAutoRoleFields() {
+    final generation = _isFounder || widget.allMembers.isEmpty
+        ? 0
+        : _selectedParentId == null
+            ? 1
+            : _generationOfParent(_selectedParentId!);
+    final roleText = FamilyMember.autoRole(
+      generation: generation,
+      gender: _selectedGender,
+    );
+    if (_roleController.text != roleText) {
+      _roleController.text = roleText;
+    }
+    if (_relationshipController.text != roleText) {
+      _relationshipController.text = roleText;
+    }
   }
 
   int _generationOfParent(String parentId) {

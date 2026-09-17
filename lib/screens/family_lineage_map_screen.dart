@@ -43,7 +43,7 @@ class FamilyLineageMapScreen extends StatelessWidget {
     final chartWidth =
         (maxMembersInAnyGeneration * (cardWidth + gap)) + (xStart * 2) + 60;
     final chartHeight =
-        ((maxGeneration + 1) * (cardHeight + generationGap + 50)) + 60;
+        ((maxGeneration + 1) * (cardHeight + generationGap + 50)) + 100;
 
     final nodePositions = <String, Offset>{};
     final parentConnections = <_ParentConnection>[];
@@ -53,7 +53,7 @@ class FamilyLineageMapScreen extends StatelessWidget {
       for (var memberIndex = 0; memberIndex < generationMembers.length; memberIndex++) {
         final member = generationMembers[memberIndex];
         final x = xStart + (memberIndex * (cardWidth + gap));
-        final y = yStart + (generationIndex * (cardHeight + generationGap + 42));
+        final y = yStart + (generationIndex * (cardHeight + generationGap + 42)) + 34;
         nodePositions[member.id] = Offset(x + (cardWidth / 2), y + (cardHeight / 2));
 
         if (member.parentId != null) {
@@ -67,7 +67,7 @@ class FamilyLineageMapScreen extends StatelessWidget {
             final parentIndex = parentMembers.indexWhere((candidate) => candidate.id == parent.id);
             if (parentIndex >= 0) {
               final parentX = xStart + (parentIndex * (cardWidth + gap));
-              final parentY = yStart + (parentGen * (cardHeight + generationGap + 42));
+              final parentY = yStart + (parentGen * (cardHeight + generationGap + 42)) + 34;
               parentConnections.add(
                 _ParentConnection(
                   from: Offset(parentX + (cardWidth / 2), parentY + cardHeight),
@@ -79,6 +79,8 @@ class FamilyLineageMapScreen extends StatelessWidget {
         }
       }
     }
+
+    final breadcrumbItems = <String>['Dashboard', 'Generations'];
 
     return Scaffold(
       appBar: AppBar(
@@ -95,68 +97,188 @@ class FamilyLineageMapScreen extends StatelessWidget {
                 ),
               ),
             )
-          : InteractiveViewer(
-              minScale: 0.7,
-              maxScale: 1.8,
+          : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: CustomPaint(
-                  painter: _LineageConnectionPainter(
-                    connections: parentConnections,
-                  ),
-                  child: SizedBox(
-                    width: chartWidth,
-                    height: chartHeight,
-                    child: Column(
-                      children: [
-                        for (var generationIndex = 0; generationIndex <= maxGeneration; generationIndex++) ...[
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.surface,
+                            Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
                           Container(
-                            width: chartWidth,
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: generationColors[generationIndex % generationColors.length],
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.black.withValues(alpha: 0.04),
-                              ),
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Generation $generationIndex',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (final member in groupedByGeneration[generationIndex] ?? const <FamilyMember>[]) ...[
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 18),
-                                        child: SizedBox(
-                                          width: cardWidth,
-                                          height: cardHeight,
-                                          child: _LineageMemberCard(
-                                            member: member,
-                                            isAncestor: member.parentId == null,
-                                            parentName: _resolveParentName(member, members),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ],
+                            child: Icon(
+                              Icons.home_outlined,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          for (var i = 0; i < breadcrumbItems.length; i++) ...[
+                            InkWell(
+                              onTap: i == 0 ? () => Navigator.pop(context) : null,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      breadcrumbItems[i],
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: i == breadcrumbItems.length - 1
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                        color: i == breadcrumbItems.length - 1
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    if (i < breadcrumbItems.length - 1)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 6),
+                                        child: Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 18,
+                                          color: Theme.of(context).colorScheme.outline,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: InteractiveViewer(
+                        minScale: 0.7,
+                        maxScale: 1.8,
+                        constrained: false,
+                        boundaryMargin: const EdgeInsets.all(80),
+                        child: SizedBox(
+                          width: chartWidth + 120,
+                          height: chartHeight + 80,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: _LineageConnectionPainter(
+                                    connections: parentConnections,
+                                  ),
+                                ),
+                              ),
+                              for (var generationIndex = 0; generationIndex <= maxGeneration; generationIndex++) ...[
+                                Positioned(
+                                  left: 16,
+                                  top: yStart + (generationIndex * (cardHeight + generationGap + 42)),
+                                  child: InkWell(
+                                    onTap: () {
+                                      showDialog<void>(
+                                        context: context,
+                                        builder: (dialogContext) {
+                                          final generationCount = groupedByGeneration[generationIndex]?.length ?? 0;
+                                          final totalGenerations = maxGeneration + 1;
+                                          return AlertDialog(
+                                            title: Text('Generation $generationIndex'),
+                                            content: Text(
+                                              'This generation has $generationCount member${generationCount == 1 ? '' : 's'}.\n\nTotal generations in this family: $totalGenerations.',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(dialogContext),
+                                                child: const Text('Close'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: generationColors[generationIndex % generationColors.length],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Generation $generationIndex',
+                                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            Icons.info_outline,
+                                            size: 16,
+                                            color: Theme.of(context).colorScheme.primary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                for (final member in groupedByGeneration[generationIndex] ?? const <FamilyMember>[]) ...[
+                                  Positioned(
+                                    left: xStart + (
+                                      (groupedByGeneration[generationIndex] ?? const <FamilyMember>[])
+                                          .indexOf(member) * (cardWidth + gap)
+                                    ),
+                                    top: yStart + (generationIndex * (cardHeight + generationGap + 42)) + 34,
+                                    child: SizedBox(
+                                      width: cardWidth,
+                                      height: cardHeight,
+                                      child: _LineageMemberCard(
+                                        member: member,
+                                        isAncestor: member.parentId == null,
+                                        parentName: _resolveParentName(member, members),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

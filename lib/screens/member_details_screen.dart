@@ -9,10 +9,12 @@ class MemberDetailsScreen extends StatelessWidget {
     super.key,
     required this.member,
     required this.allMembers,
+    this.onDelete,
   });
 
   final FamilyMember member;
   final List<FamilyMember> allMembers;
+  final ValueChanged<String>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,18 @@ class MemberDetailsScreen extends StatelessWidget {
     final spouse = _findMemberById(member.spouseId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Family profile'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Family profile'),
+        elevation: 0,
+        actions: [
+          if (onDelete != null)
+            IconButton(
+              onPressed: () => _confirmDelete(context),
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete member',
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -241,6 +254,40 @@ class MemberDetailsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete family member?'),
+        content: Text(
+          'This will remove ${member.name} from the family tree and clear any links to their partner or parent.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || onDelete == null) {
+      return;
+    }
+
+    onDelete!(member.id);
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
