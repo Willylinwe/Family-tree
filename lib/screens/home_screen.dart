@@ -11,6 +11,8 @@ import '../widgets/member_widgets.dart';
 import '../widgets/stats_card.dart';
 import '../controllers/family_controller.dart';
 
+enum _MemberFilter { all, living, deceased }
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -526,7 +528,75 @@ class _SummaryMetricCard extends StatelessWidget {
   }
 }
 
-class MembersDirectoryScreen extends StatelessWidget {
+class _MembersSummaryCard extends StatelessWidget {
+  const _MembersSummaryCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+    this.isActive = false,
+    this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = isActive ? color : color.withValues(alpha: 0.2);
+    final card = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isActive ? 0.12 : 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) {
+      return card;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: card,
+    );
+  }
+}
+
+class MembersDirectoryScreen extends StatefulWidget {
   const MembersDirectoryScreen({
     super.key,
     required this.members,
@@ -535,14 +605,37 @@ class MembersDirectoryScreen extends StatelessWidget {
   final List<FamilyMember> members;
 
   @override
+  State<MembersDirectoryScreen> createState() => _MembersDirectoryScreenState();
+}
+
+class _MembersDirectoryScreenState extends State<MembersDirectoryScreen> {
+  _MemberFilter _selectedFilter = _MemberFilter.all;
+
+  List<FamilyMember> get _filteredMembers {
+    switch (_selectedFilter) {
+      case _MemberFilter.living:
+        return widget.members.where((member) => member.isAlive).toList();
+      case _MemberFilter.deceased:
+        return widget.members.where((member) => !member.isAlive).toList();
+      case _MemberFilter.all:
+      default:
+        return widget.members;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final totalMembers = widget.members.length;
+    final livingCount = widget.members.where((member) => member.isAlive).length;
+    final deceasedCount = totalMembers - livingCount;
+    final filteredMembers = _filteredMembers;
     final groupedByGeneration = <int, List<FamilyMember>>{};
-    for (final member in members) {
+    for (final member in filteredMembers) {
       groupedByGeneration.putIfAbsent(member.generation, () => <FamilyMember>[]).add(member);
     }
 
     final generations = groupedByGeneration.keys.toList()..sort();
-    final totalGenerations = members.isEmpty ? 0 : (members.map((member) => member.generation).reduce((a, b) => a > b ? a : b) + 1);
+    final totalGenerations = filteredMembers.isEmpty ? 0 : (filteredMembers.map((member) => member.generation).reduce((a, b) => a > b ? a : b) + 1);
     final orderedMembers = <MapEntry<int, List<FamilyMember>>>[];
     for (final generation in generations) {
       final generationMembers = [...groupedByGeneration[generation]!]
@@ -565,13 +658,56 @@ class MembersDirectoryScreen extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _MembersSummaryCard(
+                    label: 'Total members',
+                    value: '$totalMembers',
+                    color: AppTheme.primaryColor,
+                    icon: Icons.groups_2_rounded,
+                    isActive: _selectedFilter == _MemberFilter.all,
+                    onTap: () => setState(() => _selectedFilter = _MemberFilter.all),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MembersSummaryCard(
+                    label: 'Living',
+                    value: '$livingCount',
+                    color: Colors.green,
+                    icon: Icons.favorite_rounded,
+                    isActive: _selectedFilter == _MemberFilter.living,
+                    onTap: () => setState(() => _selectedFilter = _MemberFilter.living),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MembersSummaryCard(
+                    label: 'Deceased',
+                    value: '$deceasedCount',
+                    color: Colors.grey,
+                    icon: Icons.person_off_rounded,
+                    isActive: _selectedFilter == _MemberFilter.deceased,
+                    onTap: () => setState(() => _selectedFilter = _MemberFilter.deceased),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
-            child: members.isEmpty
-                ? const Center(
+            child: filteredMembers.isEmpty
+                ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(24),
                       child: Text(
-                        'No family members yet.\nAdd a member to begin your directory.',
+                        _selectedFilter == _MemberFilter.living
+                            ? 'No living members yet.'
+                            : _selectedFilter == _MemberFilter.deceased
+                                ? 'No deceased members yet.'
+                                : 'No family members yet.\nAdd a member to begin your directory.',
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -646,7 +782,7 @@ class MembersDirectoryScreen extends StatelessWidget {
                                     MaterialPageRoute(
                                       builder: (context) => MemberDetailsScreen(
                                         member: member,
-                                        allMembers: members,
+                                        allMembers: widget.members,
                                       ),
                                     ),
                                   ),

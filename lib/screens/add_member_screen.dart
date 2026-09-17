@@ -37,6 +37,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   FamilyGender _selectedGender = FamilyGender.other;
   String? _selectedParentId;
   String? _selectedSpouseId;
+  String? _selectedSiblingId;
 
   @override
   void initState() {
@@ -366,6 +367,41 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                               onChanged: (value) => setState(() => _selectedSpouseId = value),
                             ),
                           if (widget.allMembers.isNotEmpty) const SizedBox(height: 12),
+                          if (widget.allMembers.isNotEmpty)
+                            DropdownButtonFormField<String>(
+                              key: const ValueKey('sibling-selector'),
+                              value: _selectedSiblingId,
+                              decoration: const InputDecoration(
+                                labelText: 'Add as sibling to',
+                                prefixIcon: Icon(Icons.groups_2_outlined),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text('No sibling selected'),
+                                ),
+                                ...widget.allMembers.map(
+                                  (member) => DropdownMenuItem(
+                                    value: member.id,
+                                    child: Text(member.name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedSiblingId = value;
+                                  if (value != null) {
+                                    final sibling = widget.allMembers.firstWhere(
+                                      (member) => member.id == value,
+                                      orElse: () => widget.allMembers.first,
+                                    );
+                                    _selectedParentId = sibling.parentId;
+                                    _isFounder = false;
+                                  }
+                                });
+                              },
+                            ),
+                          if (widget.allMembers.isNotEmpty) const SizedBox(height: 12),
                           if (widget.forceFounder)
                             Container(
                               padding: const EdgeInsets.all(14),
@@ -518,12 +554,24 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       return;
     }
 
+    final resolvedParentId = _selectedSiblingId != null
+        ? _resolveSiblingParentId(_selectedSiblingId!)
+        : _selectedParentId;
+
     final name = _nameController.text.trim();
-    final generation = _isFounder || widget.allMembers.isEmpty
-        ? 0
-        : _selectedParentId == null
-            ? 1
-            : _generationOfParent(_selectedParentId!);
+
+    int generation;
+    if (_isFounder || widget.allMembers.isEmpty) {
+      generation = 0;
+    } else if (_selectedSiblingId != null) {
+      final sibling = widget.allMembers.firstWhere(
+        (m) => m.id == _selectedSiblingId,
+        orElse: () => widget.allMembers.first,
+      );
+      generation = sibling.generation;
+    } else {
+      generation = resolvedParentId == null ? 1 : _generationOfParent(resolvedParentId);
+    }
     final autoRole = FamilyMember.autoRole(
       generation: generation,
       gender: _selectedGender,
@@ -547,7 +595,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       generation: generation,
       parentId: _isFounder || widget.allMembers.isEmpty
           ? null
-          : _selectedParentId,
+          : resolvedParentId,
       childIds: const [],
       location: location.isEmpty ? null : location,
       note: note.isEmpty ? null : note,
@@ -583,6 +631,14 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     if (_relationshipController.text != roleText) {
       _relationshipController.text = roleText;
     }
+  }
+
+  String? _resolveSiblingParentId(String siblingId) {
+    final sibling = widget.allMembers.firstWhere(
+      (member) => member.id == siblingId,
+      orElse: () => widget.allMembers.first,
+    );
+    return sibling.parentId;
   }
 
   int _generationOfParent(String parentId) {
