@@ -23,7 +23,9 @@ class FamilyController extends ChangeNotifier {
       _members.isEmpty ? 0 : _members.map((member) => member.generation).fold(0, max);
 
   List<FamilyMember> get rootMembers =>
-      _members.where((member) => member.parentId == null).toList();
+      _members
+        .where((member) => member.parentId == null && member.fatherId == null && member.motherId == null)
+        .toList();
 
   FamilyMember? get rootMember {
     if (rootMembers.isEmpty) return null;
@@ -61,6 +63,12 @@ class FamilyController extends ChangeNotifier {
     if (newMember.parentId != null) {
       _updateParentChildren(newMember.parentId!, newMember.id);
     }
+    if (newMember.fatherId != null) {
+      _updateParentChildren(newMember.fatherId!, newMember.id);
+    }
+    if (newMember.motherId != null) {
+      _updateParentChildren(newMember.motherId!, newMember.id);
+    }
 
     if (newMember.spouseId != null) {
       _updateSpouseLink(newMember.spouseId!, newMember.id);
@@ -84,6 +92,14 @@ class FamilyController extends ChangeNotifier {
 
       if (updatedMember.parentId == memberId) {
         updatedMember = updatedMember.copyWith(parentId: null, generation: 0);
+      }
+
+      if (updatedMember.fatherId == memberId) {
+        updatedMember = updatedMember.copyWith(fatherId: null);
+      }
+
+      if (updatedMember.motherId == memberId) {
+        updatedMember = updatedMember.copyWith(motherId: null);
       }
 
       if (updatedMember.spouseId == memberId) {

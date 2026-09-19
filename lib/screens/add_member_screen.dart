@@ -38,6 +38,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   String? _selectedParentId;
   String? _selectedSpouseId;
   String? _selectedSiblingId;
+  String? _selectedFatherId;
+  String? _selectedMotherId;
 
   @override
   void initState() {
@@ -396,10 +398,54 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                       orElse: () => widget.allMembers.first,
                                     );
                                     _selectedParentId = sibling.parentId;
+                                    _selectedFatherId = sibling.fatherId;
+                                    _selectedMotherId = sibling.motherId;
                                     _isFounder = false;
                                   }
                                 });
                               },
+                            ),
+                          if (widget.allMembers.isNotEmpty) const SizedBox(height: 12),
+                          if (!_isFounder && widget.allMembers.isNotEmpty)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                DropdownButtonFormField<String>(
+                                  key: ValueKey(_selectedFatherId ?? 'father-none'),
+                                  initialValue: _selectedFatherId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Father',
+                                    prefixIcon: Icon(Icons.male_outlined),
+                                  ),
+                                  items: widget.allMembers
+                                      .map(
+                                        (member) => DropdownMenuItem(
+                                          value: member.id,
+                                          child: Text(member.name),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) => setState(() => _selectedFatherId = value),
+                                ),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  key: ValueKey(_selectedMotherId ?? 'mother-none'),
+                                  initialValue: _selectedMotherId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Mother',
+                                    prefixIcon: Icon(Icons.female_outlined),
+                                  ),
+                                  items: widget.allMembers
+                                      .map(
+                                        (member) => DropdownMenuItem(
+                                          value: member.id,
+                                          child: Text(member.name),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) => setState(() => _selectedMotherId = value),
+                                ),
+                              ],
                             ),
                           if (widget.allMembers.isNotEmpty) const SizedBox(height: 12),
                           if (widget.forceFounder)
@@ -563,6 +609,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     int generation;
     if (_isFounder || widget.allMembers.isEmpty) {
       generation = 0;
+    } else if (_selectedFatherId != null || _selectedMotherId != null) {
+      final parentIdForGen = _selectedFatherId ?? _selectedMotherId!;
+      generation = _generationOfParent(parentIdForGen);
     } else if (_selectedSiblingId != null) {
       final sibling = widget.allMembers.firstWhere(
         (m) => m.id == _selectedSiblingId,
@@ -593,9 +642,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       name: name,
       role: role,
       generation: generation,
-      parentId: _isFounder || widget.allMembers.isEmpty
-          ? null
-          : resolvedParentId,
+      parentId: _isFounder || widget.allMembers.isEmpty ? null : resolvedParentId,
+      fatherId: _selectedFatherId,
+      motherId: _selectedMotherId,
       childIds: const [],
       location: location.isEmpty ? null : location,
       note: note.isEmpty ? null : note,

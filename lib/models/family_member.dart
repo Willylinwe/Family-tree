@@ -95,6 +95,8 @@ class FamilyMember {
     required this.generation,
     this.childIds = const <String>[],
     this.parentId,
+    this.fatherId,
+    this.motherId,
     this.location,
     this.note,
     this.spouseId,
@@ -114,6 +116,8 @@ class FamilyMember {
   final String role;
   final int generation;
   final String? parentId;
+  final String? fatherId;
+  final String? motherId;
   final List<String> childIds;
   final String? location;
   final String? note;
@@ -178,6 +182,8 @@ class FamilyMember {
     Object? role = _undefined,
     Object? generation = _undefined,
     Object? parentId = _undefined,
+    Object? fatherId = _undefined,
+    Object? motherId = _undefined,
     Object? childIds = _undefined,
     Object? location = _undefined,
     Object? note = _undefined,
@@ -198,6 +204,8 @@ class FamilyMember {
       role: role == _undefined ? this.role : role as String,
       generation: generation == _undefined ? this.generation : generation as int,
       parentId: parentId == _undefined ? this.parentId : parentId as String?,
+      fatherId: fatherId == _undefined ? this.fatherId : fatherId as String?,
+      motherId: motherId == _undefined ? this.motherId : motherId as String?,
       childIds: childIds == _undefined ? this.childIds : childIds as List<String>,
       location: location == _undefined ? this.location : location as String?,
       note: note == _undefined ? this.note : note as String?,
@@ -228,6 +236,8 @@ class FamilyMember {
         'role': role,
         'generation': generation,
         'parentId': parentId,
+        'fatherId': fatherId,
+        'motherId': motherId,
         'childIds': childIds,
         'location': location,
         'note': note,
@@ -257,6 +267,8 @@ class FamilyMember {
       role: json['role'] is String ? json['role'] as String : 'Family member',
       generation: parsedGeneration,
       parentId: json['parentId'] is String ? json['parentId'] as String : null,
+      fatherId: json['fatherId'] is String ? json['fatherId'] as String : null,
+      motherId: json['motherId'] is String ? json['motherId'] as String : null,
       childIds: (json['childIds'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
